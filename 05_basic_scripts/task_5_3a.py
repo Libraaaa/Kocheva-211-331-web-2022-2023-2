@@ -11,23 +11,22 @@ VLANа или списка VLANов:
 Ограничение: Все задания надо выполнять используя только пройденные темы.
 То есть эту задачу можно решить без использования условия if и циклов for/while.
 """
+
 template = {
-    'access_template': {
+    'access_template': [
         "switchport mode access",
         "switchport access vlan {}",
         "switchport nonegotiate",
         "spanning-tree portfast",
         "spanning-tree bpduguard enable",
-    },
+    ],
 
-    'trunk_template': {
+    'trunk_template': [
         "switchport trunk encapsulation dot1q",
         "switchport mode trunk",
         "switchport trunk allowed vlan {}",
-    }
+    ]
 }
-
-
 
 mode = input('Введите режим работы интерфейса (access/trunk): ')
 interface = input('Введите тип и номер интерфейса: ')
