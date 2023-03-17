@@ -34,52 +34,33 @@
  '172.21.41.129', '172.21.41.130', '172.21.41.131', '172.21.41.132']
 
 """
-# new_list = []
-# def convert_ranges_to_ip_list(addresses):
-#     for address in addresses:
-#         if address.find('-') == -1: 
-#             new_list.append(address)
-#         else:
-#             count_point = address.count('.')
-#             # print(count_point,' точки')
-#             if count_point == 3:
-#                 count_addresses = address[address.find('-')+1::]
-#                 # print(count_addresses, 'колво')
-#                 new_list.append(address)
-#                 host = address[:address.find('-')].split('.')[-1]
-#                 # print(host)
-#                 for i in count_addresses:
-#                     next_host = host + i
-#                     print(host, i)
-#                     # next_address = address.split('.')[0] + '.' + address.split('.')[1] + '.' + address.split('.')[3] + 
-#             # else: 
-
-
-# if __name__ == '__main__':
-#     print(convert_ranges_to_ip_list(['8.8.4.4', '1.1.1.1-3']))
-
-
-
-def convert_ranges_to_ip_list(ip_list):
-    full_ip_list = []
-    for ip in ip_list:
-        octets = ip.split('.')
-        if ip.find('-') != -1: 
-            ip_start = 1
-            ip_end = 1
-            if len(octets) == 4:
-                ip_range = octets[-1].split('-')
-                ip_start = int(ip_range[0])
-                ip_end = int(ip_range[-1])
-            else:
-                first_ip, second_ip = ip.split('-')
-                ip_start = int(first_ip.split('.')[-1])
-                ip_end = int(second_ip.split('.')[-1])
-            for i in range(ip_start, ip_end + 1):
-                full_ip_list.append('.'.join(octets[:3]) + '.' + str(i))
+new_list = []
+def convert_ranges_to_ip_list(addresses):
+    for address in addresses:
+        if address.find('-') == -1: 
+            new_list.append(address)
         else:
-            full_ip_list.append(ip)
-    return full_ip_list
+            count_point = address.count('.')
+            if count_point == 3:
+                count_addresses = address[address.find('-')+1::]
+                new_list.append(address[:address.find('-')])
+                host = int(address[:address.find('-')].split('.')[-1])
+                network_address = address[:address.find('-')].split('.')[0] + '.' + address[:address.find('-')].split('.')[1] + '.' + address[:address.find('-')].split('.')[2] + '.' 
+                for i in range(host, int(count_addresses)):
+                    next_host = str(host + i)
+                    next_address = network_address + next_host
+                    new_list.append(next_address)
+            else: 
+                end_ip = address[address.find('-')+1::]
+                new_list.append(address[:address.find('-')])
+                host = int(address[:address.find('-')].split('.')[-1])
+                network_address = address[:address.find('-')].split('.')[0] + '.' + address[:address.find('-')].split('.')[1] + '.' + address[:address.find('-')].split('.')[2] + '.' 
+                for i in range(int(host+1), int(end_ip.split('.')[-1])+1):
+                    next_host = str(i)
+                    next_address = network_address + next_host
+                    new_list.append(next_address)
+    return new_list
+
 
 if __name__ == '__main__':
     print(convert_ranges_to_ip_list(['8.8.4.4', '1.1.1.1-3', '172.21.41.128-172.21.41.132']))
