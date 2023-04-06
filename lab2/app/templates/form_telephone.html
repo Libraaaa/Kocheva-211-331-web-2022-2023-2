@@ -1,0 +1,17 @@
+{% extends 'base.html' %}
+
+{% block content %}
+    <form method = "POST">
+        <div class="mb-3">
+            <label for="telephone" class="form-label">Введите номер</label>
+            <input class="form-control is-{%if error_text != ''%}invalid {% endif%}" type="text" name="telephone" id="telephone" value="{{ request.form.telephone }}">
+            
+            <div class="invalid-feedback">
+                {{ error_text }}
+            </div>
+        </div>
+
+        <button class="btn btn-primary">Проверить</button>
+    </form>
+    <p class="mt-2" style="color:forestgreen">Ваш номер: {{ temptel }}</p>
+{% endblock %}method = "POST"
