@@ -18,18 +18,30 @@ IP-адрес считается доступным, если выполнени
 
 Ограничение: Все задания надо выполнять используя только пройденные темы.
 """
+import subprocess
 
 def ping_ip_addresses(addresses):
     reachable_addresses = []
     unreachable_addresses = []
+    # for ip in addresses:
+    #     ip_ping = subprocess.run(['ping', ip])
+    #     if ip_ping.returncode == 0:
+    #         reachable_addresses.append(ip)
+    #     else: unreachable_addresses.append(ip)
+    #     print('Доступные: ', reachable_addresses, '\nНедоступные:', unreachable_addresses)
     for ip in addresses:
-        ip_ping = subprocess.run(['ping', ip])
-        if ip_ping.returncode == 0:
+        result = subprocess.run(
+            ["ping", "-c", "3", ip],
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
+        )
+        if result.returncode == 0:
             reachable_addresses.append(ip)
-        else: unreachable_addresses.append(ip)
-        print('Доступные: ', reachable_addresses, '\nНедоступные:', unreachable_addresses)
+        else:
+            unreachable_addresses.append(ip)
     return (reachable_addresses, unreachable_addresses)
 
 if __name__ == '__main__':
     list_of_ips = ["1.1.1.1", "8.8.8.8", "8.8.4.4", "8.8.7.1"]
     print(ping_ip_addresses(list_of_ips))
+
