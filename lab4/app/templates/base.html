@@ -33,8 +33,8 @@
                         </li>
                         {% if current_user.is_authenticated %}
                         <li class="nav-item">
-                            <a class="nav-link {% if request.endpoint == 'change_password' %} active {% endif %}"
-                                href="{{ url_for('change_password', user_id=current_user.id) }}">Сменить пароль</a>
+                            <a class="nav-link {% if request.endpoint == 'update_password' %} active {% endif %}"
+                                href="{{ url_for('update_password', user_id=current_user.id) }}">Сменить пароль</a>
                         </li>
                         {% endif %}
                         <li class="nav-item">

@@ -93,7 +93,6 @@ def none_error(params):
 
 def login_error(login):
     login_text_error = ''
-    # allowed_symbols = string.ascii_letters + '0123456789'
     allowed_symbols = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789'
     for i in login:
         if i not in allowed_symbols:
@@ -107,31 +106,28 @@ def login_error(login):
 
 def password_error(password):
     password_text_error = ''
-    allowed_letters = 'абвгдеёжзийклмнопрстуфхцчшщъыьэюяАБВГДЕЁЖЗИЙКЛМНОПРСТУФХЦЧШЩЪЫЬЭЮЯabcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ'
     allowed_symbols = '~!?@#$%^&*_-+()[]{}></\|"\'.,:;'
-    big_symbols = 'АБВГДЕЁЖЗИЙКЛМНОПРСТУФХЦЧШЩЪЫЬЭЮЯABCDEFGHIJKLMNOPQRSTUVWXYZ'
-    small_symbols = 'абвгдеёжзийклмнопрстуфхцчшщъыьэюяabcdefghijklmnopqrstuvwxyz'
-    nums = '0123456789'
-    count_b = 0
-    count_s = 0
-    count_nums = 0
-    for i in password:
-        if i not in allowed_letters:
-            password_text_error = 'Пароль может состоять только из латинских или киррилических букв'
-        if i in big_symbols:
-            count_b += 1
-        if i in small_symbols:
-            count_s += 1
-        if count_b < 1 or count_s < 1:
-            password_text_error = 'Пароль должен иметь, как минимум, одну заглавную и одну строчную букву'
-        if i in nums:
-            count_nums += 1
-        if count_nums < 1:
-            password_text_error = 'Пароль должен иметь, как минимум, одну цифру и может включать в себя только арабские цифры'
-        if i not in allowed_symbols:
-            password_text_error = 'Пароль содержит недопустимые символы'
-    if len(password) < 8 and len(password) > 128:
-        password_text_error = 'Пароль должен быть не менее 8 и не более 128 символов'
+    count_b = False
+    count_s = False
+    count_nums = False
+    if len(password) < 8 or len(password) > 128:
+        password_text_error = 'Пароль должен быть не менее 8 и не более 128 символов.'
+    else:
+        for i in password:
+            if not i.isalnum():
+                password_text_error += 'Пароль может состоять только из латинских или киррилических букв. '
+            elif i.isupper():
+                count_b = True
+            elif i.islower():
+                count_s = True
+            elif i.isdigit():
+                count_nums = True
+            elif i not in allowed_symbols:
+                password_text_error += 'Пароль содержит недопустимые символы. '
+        if not count_b or not count_s:
+            password_text_error += 'Пароль должен иметь, как минимум, одну заглавную и одну строчную букву. '
+        if not count_nums:
+            password_text_error += 'Пароль должен иметь, как минимум, одну цифру и может включать в себя только арабские цифры. '
     return password_text_error
 
 @app.route('/users/create', methods=['POST'])
@@ -144,10 +140,10 @@ def create_user():
     else:
         login_text_error = ''
     if params['password']:
-        password_text_error = password_error(params['login'])
+        password_text_error = password_error(params['password'])
     else:
         password_text_error = ''
-    if not none_error_list or login_text_error != '':
+    if not none_error_list or login_text_error != '' or password_text_error != '':
         return render_template('users_new.html', user = params, roles_list = load_roles(), none_error_list = none_error_list, login_text_error = login_text_error, password_text_error = password_text_error)
     query = 'INSERT INTO users(login, password_hash, last_name, first_name, middle_name, role_id) VALUES (%(login)s, SHA2(%(password)s, 256), %(last_name)s, %(first_name)s, %(middle_name)s, %(role_id)s);'
     try:
@@ -161,8 +157,6 @@ def create_user():
         return render_template('users_new.html', user = params, roles_list = load_roles(), none_error_list = none_error_list, login_text_error = login_text_error, password_text_error = password_text_error)
     
     return redirect(url_for('users'))
-
-    
 
 @app.route('/users/<int:user_id>/update', methods=['POST'])
 @login_required
@@ -210,43 +204,41 @@ def delete_user(user_id):
         flash('При удалении пользователя возникла ошибка.', 'danger')
     return redirect(url_for('users'))
 
-@app.route('/<int:user_id>/update_password', methods=['POST'])
+@app.route('/<int:user_id>/update_password', methods=['GET', 'POST'])
 @login_required
 def update_password(user_id):
-    old_password = request.form['old_password']
-    # new_password = request.form['new_password']
-    # repeat_new_password = request.form['repeat_new_password']
-    params = extract_params(['old_password', 'new_password', 'repeat_new_password'])
-    params['id'] = user_id
-    # none_error_list = none_error(params)
-    query_select = ('SELECT * FROM users WHERE login = %s, id=%s and password_hash = SHA2(%s, 256);')
-    # query_update = ('UPDATE users SET SHA2(%(old_password)s, 256) WHERE login = %s and id=%(id)s;')
-    # try:
-    with db.connection().cursor(named_tuple=True) as cursor:
-        cursor.execute(query_select, (user_id, old_password))
-        print(cursor.statement)
-        user = cursor.fetchone()
-    if user:
-        flash('Пароль верный', 'success')
-        # return render_template('change_password.html', user = params, none_error_list = none_error_list)
-    flash('Неправильный пароль', 'danger')
-
-    # except mysql.connector.errors.DatabaseError:
-    #     db.connection().rollback()
-    #     flash('При сохранении данных возникла ошибка.', 'danger')
-    #     return render_template('change_password.html', user = params, roles_list = load_roles(), none_error_list = none_error_list)
-
-    return render_template('change_password.html', user_id = user_id)
-
-@app.route('/<int:user_id>/change_password')
-@login_required
-def change_password(user_id):
-    query = 'SELECT * FROM users WHERE users.id = %s and password_hash = SHA2(%s, 256);'
-    # cursor = db.connection().cursor(named_tuple=True)
-    # cursor.execute(query, (user_id))
-    # user = cursor.fetchone()
-    # cursor.close()
-    return render_template('change_password.html', user_id = user_id)
+    none_error_list = []
+    password_text_error = ''
+    error_passwords = []
+    if request.method == 'POST':
+        params = extract_params(['old_password', 'new_password', 'repeat_new_password'])
+        none_error_list = none_error(params)
+        if none_error_list:
+            return render_template('update_password.html', none_error_list = none_error_list)
+        if params['new_password']:
+            password_text_error = password_error(params['new_password'])
+            if params['new_password'] != params['repeat_new_password']:
+                error_passwords.append('repeat_new_password')
+        
+        query_select = ('SELECT * FROM users WHERE id=%s and password_hash = SHA2(%s, 256);')
+        with db.connection().cursor(named_tuple=True) as cursor:
+            cursor.execute(query_select, (user_id, params['old_password']))
+            print(cursor.statement)
+            user = cursor.fetchone()
+        if user and not error_passwords and password_text_error == '':
+            query_update = ('UPDATE users SET password_hash = SHA2(%s, 256) WHERE id=%s;')
+            try:
+                with db.connection().cursor(named_tuple=True) as cursor:
+                    cursor.execute(query_update, (params['old_password'], user_id))
+                    db.connection().commit()
+                    flash('Пароль Изменён', 'success')
+                    return redirect(url_for('index'))
+            except mysql.connector.errors.DatabaseError:
+                db.connection().rollback()
+                flash('При сохранении данных возникла ошибка.', 'danger')
+        elif not user:
+            error_passwords.append('old_password')
+    return render_template('update_password.html', none_error_list = none_error_list, password_text_error = password_text_error, error_passwords = error_passwords)
 
 @app.route('/user/<int:user_id>')
 def show_user(user_id):
