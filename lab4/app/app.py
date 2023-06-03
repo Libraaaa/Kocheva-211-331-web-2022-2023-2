@@ -3,7 +3,6 @@ from flask import Flask, render_template, session, request, redirect, url_for, f
 from flask_login import LoginManager, UserMixin, login_user, logout_user, login_required
 from mysql_db import MySQL
 import mysql.connector
-import string
 PERMITED_PARAMS = ['login', 'password', 'last_name', 'first_name', 'middle_name', 'role_id']
 EDIT_PARAMS = ['last_name', 'first_name', 'middle_name', 'role_id']
 
