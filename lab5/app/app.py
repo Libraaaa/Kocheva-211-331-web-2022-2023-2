@@ -70,7 +70,8 @@ def load_roles():
 def extract_params(params_list):
     params_dict = {}
     for param in params_list:
-        params_dict[param] = request.form[param] or None
+        # params_dict[param] = request.form[param] or None
+        params_dict[param] = request.form.get(param, None) or None
     return params_dict
 
 @app.route('/users/create', methods=['POST'])

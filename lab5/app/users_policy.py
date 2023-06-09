@@ -21,3 +21,6 @@ class UsersPolicy:
 
     def change_role(self):
         return current_user.is_admin()
+    
+    def show_stat(self):
+        return current_user.is_admin()
