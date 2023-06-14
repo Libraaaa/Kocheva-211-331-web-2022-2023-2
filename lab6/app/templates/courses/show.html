@@ -1,0 +1,106 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="title-area position-relative" style="background-image: url({{ course.bg_image.url }});">
+    <div class="h-100 w-100 py-5 d-flex text-center position-absolute" style="background-color: rgba(0, 0, 0, 0.65);">
+        <div class="m-auto">
+            <h1 class="title mb-3 font-weight-bold">{{ course.name }}</h1>
+            <p class="mb-3 mx-auto">
+                {{ course.category.name }} | <span>★</span> <span>{{ "%.2f" | format(course.rating) }}</span>
+            </p>
+            <div class="container">
+                <p class="description w-75 mb-5 mx-auto">
+                    {{ course.short_desc }}
+                </p>
+            </div>
+            {% if current_user.is_authenticated %}
+                <a href="#" class="btn btn-outline-light btn-lg">Перейти к материалам курса</a>
+            {% else %}
+                <button class="btn btn-outline-light btn-lg" disabled>Записаться</button>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<div class="container mt-5">
+    <section class="about mb-5">
+        <h2 class="mb-3 text-center text-uppercase font-weight-bold">О курсе</h2>
+        <p>{{ course.full_desc }}</p>
+    </section>
+
+    <section class="program mb-5">
+        <h2 class="mb-3 text-center text-uppercase font-weight-bold">Программа курса</h2>
+
+        {% for theme in course.themes %}
+            <div class="card mb-3">
+                <div class="card-header d-flex align-items-center">
+                    <h5 class="mb-0">Тема {{ loop.index }}. {{ theme.name }}</h5>
+                    {% if current_user.is_authenticated and current_user.id == course.author_id %}
+                        <button class="btn btn-primary btn-sm ms-auto" title="Добавить пункт" data-parent-id="{{ theme.id }}">+</button>
+                    {% endif %}
+                </div>
+                <div class="card-body">
+                    {% set outer_loop = loop %}
+                    {% for subtheme in theme.subthemes %}
+                        <div class="d-flex align-items-center">
+                            <p class="card-text mb-3">{{ outer_loop.index }}.{{ loop.index }}. {{ subtheme.name }}</p>
+                            {% if current_user.is_authenticated and current_user.id == course.author_id %}
+                            <a href="#" class="btn btn-sm ms-auto" title="Добавить материал"
+                                data-parent-id="{{ theme.id }}">+</a>
+                            {% endif %}
+                        </div>
+                    {% endfor %}
+                </div>
+            </div>
+        {% endfor %}
+
+        {% if current_user.is_authenticated and current_user.id == course.author_id %}
+            <div class="text-center">
+                <button type="button" class="btn btn-dark">
+                    Добавить тему
+                </button>
+            </div>
+        {% endif %}
+
+    </section>
+    <section class="review mb-5">
+        <div class="reviews-list container-fluid mt-3 mb-3">
+            <h2 class="mb-3 text-center text-uppercase font-weight-bold">Отзывы к курсу</h2>
+            {% if current_user.is_authenticated and current_user.id != course.author_id %}
+                {% if not review %}
+                    <div class="text-center mb-3">
+                        <a class="btn btn-dark" href="{{ url_for('courses.give_review', course_id=course.id) }}">
+                            Оставить отзыв на курс
+                        </a>
+                    </div>
+                {%else%}
+                    <div class="card border-dark mb-3">
+                        <div class="card-header">Ваш отзыв от {{review.created_at}}</div>
+                        <div class="card-body">
+                            <h5 class="card-title">Оценка: {{ review.grade.name }}</h5>
+                            <p class="card-text">{{ review.text }}</p>
+                        </div>
+                </div>
+                {%endif%}
+            {%endif%}
+
+            {% for review in course_reviews %}
+                {% if current_user.id != review.user_id %}
+                <div class="card my-3">
+                    <h5 class="card-header">{{ review.user.full_name }}</h5>
+                    <span class="px-3">{{ review.created_at }}</span>
+                    <div class="card-body">
+                    <h5 class="card-title">Оценка: {{ review.grade.name }}</h5>
+                    <p class="card-text">{{ review.text }}</p>
+                    </div>
+                </div>
+                {%endif%}
+            {% endfor %}
+        </div>
+        <div class="d-flex justify-content-end">
+            <a class="btn btn-outline-dark ms-auto fs-4 mt-2" href="{{ url_for('courses.reviews', course_id=course.id) }}">Показать все отзывы</a>
+        </div>
+    </section>
+</div>
+
+{% endblock %}

@@ -1,0 +1,29 @@
+{% extends 'base.html' %}
+
+{% block content %}
+    <div class="container">
+        <h2 class="my-3 text-center text-uppercase font-weight-bold">Отзыв</h2>
+
+        <form method="POST" action="{{ url_for('courses.send_review', course_id = course.id) }}" enctype="multipart/form-data">
+            <div class="mb-3 row d-flex justify-content-center">
+                <div class="col-md-6 d-flex flex-column ">
+                    <div class="mb-3">
+                        <label for="grade">Оценка</label>
+                        <select class="form-select" name="grade_id" id="grade">
+                            {% for grade in grades %}
+                                <option value="{{ grade.id }}">{{ grade.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label for="text_review">Текст отзыва</label>
+                        <textarea class="form-control" name="text_review" id="text_review" cols="30" rows="10"></textarea>
+                    </div>
+                </div>
+
+            <div class="mb-3 text-center">
+                <input type="submit" class="btn btn-dark" value="Отправить">
+            </div>
+        </form>
+    </div>
+{% endblock %}
