@@ -66,25 +66,26 @@ def create():
         genres = request.form.getlist('genres')
         genres = list(map(Genre.query.get, genres))  
         short_desc = markdown.markdown(bleach.clean(request.form.get('short_desc')))  
+        book = Book(**params())
+        book.genres = genres   
+        book.short_desc = short_desc
 
         if not img:
             db.session.rollback()
             flash('Выберите картинку', 'danger')
             genres = Genre.query.all()
             return render_template('books/new.html',
-                            genres=genres, book = request.form)
+                            genres=genres, book = book)
         
-        book = Book(**params(), background_image_id=img.id)
-        book.genres = genres   
-        book.short_desc = short_desc
+        book.background_image_id = img.id
 
         for key in BOOK_PARAMS:
-            if not getattr(book, key) or not book.short_desc or book.genres:
+            if not getattr(book, key) or not book.short_desc or not book.genres:
                 db.session.rollback()
                 flash('Заполните все поля', 'danger')
                 genres = Genre.query.all()
                 return render_template('books/new.html',
-                            genres=genres, book = request.form )
+                            genres=genres, book = book )
         
         db.session.add(book)
         db.session.commit()
@@ -95,7 +96,7 @@ def create():
         flash(f'При сохранении книги произошла ошибка', 'danger')
         genres = Genre.query.all()
         return render_template('books/new.html',
-                        genres=genres, book = request.form)
+                        genres=genres, book = book)
     return redirect(url_for('books.index'))
 
 
@@ -124,7 +125,7 @@ def update(book_id):
                 setattr(book, key, value)
         book.genres = genres   
         for key in BOOK_PARAMS:
-            if not getattr(book, key) or not book.short_desc or book.genres:
+            if not getattr(book, key) or not book.short_desc or not book.genres:
                 db.session.rollback()
                 flash('Все поля должны быть заполнены', 'danger')
                 genres = Genre.query.all()
