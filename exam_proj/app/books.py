@@ -58,28 +58,44 @@ def new():
 @permission_check('create')
 def create():
     f = request.files.get('background_img')
+    img = None
     if f and f.filename:
         img = ImageSaver(f).save()
         
     try:
         genres = request.form.getlist('genres')
         genres = list(map(Genre.query.get, genres))  
-        short_desc = markdown.markdown(bleach.clean(request.form.get('short_desc')))       
+        short_desc = markdown.markdown(bleach.clean(request.form.get('short_desc')))  
+
+        if not img:
+            db.session.rollback()
+            flash('Выберите картинку', 'danger')
+            genres = Genre.query.all()
+            return render_template('books/new.html',
+                            genres=genres, book = request.form)
+        
         book = Book(**params(), background_image_id=img.id)
         book.genres = genres   
         book.short_desc = short_desc
+
+        for key in BOOK_PARAMS:
+            if not getattr(book, key) or not book.short_desc or book.genres:
+                db.session.rollback()
+                flash('Заполните все поля', 'danger')
+                genres = Genre.query.all()
+                return render_template('books/new.html',
+                            genres=genres, book = request.form )
+        
         db.session.add(book)
         db.session.commit()
         flash(f'Книга "{book.name}" была успешно добавлена!', 'success')
 
     except sa.exc.SQLAlchemyError:
-        flash(f'При сохранении книги произошла ошибка', 'danger')
         db.session.rollback()
+        flash(f'При сохранении книги произошла ошибка', 'danger')
         genres = Genre.query.all()
-        users = User.query.all()
         return render_template('books/new.html',
-                        genres=genres,
-                        users=users)
+                        genres=genres, book = request.form)
     return redirect(url_for('books.index'))
 
 
@@ -107,6 +123,13 @@ def update(book_id):
             if value:
                 setattr(book, key, value)
         book.genres = genres   
+        for key in BOOK_PARAMS:
+            if not getattr(book, key) or not book.short_desc or book.genres:
+                db.session.rollback()
+                flash('Все поля должны быть заполнены', 'danger')
+                genres = Genre.query.all()
+                return render_template('books/update.html',
+                            genres=genres, book = book )
         db.session.commit()
         flash(f'Книга {book.name} была успешно изменена!', 'success')
 
@@ -124,7 +147,6 @@ def update(book_id):
 def show(book_id):
     book = Book.query.get(book_id)
     reviews_count = len(book.reviews)
-    # genres = Book.query.get(list(map(genres)))   
     user_review = Review()
     collections = Collection.query.filter_by(user_id = current_user.id)
     if current_user.is_authenticated:

@@ -38,7 +38,7 @@
                     </div>
                 </div>
                 <div class="col-md-6 d-flex flex-column">
-                    {% if request.endpoint == 'books.new'%}
+                    {% if request.endpoint == 'books.new' or request.endpoint == 'books.create'%}
                     <div class="mb-3">
                         <label for="background_img">Обложка</label>
                         <input class="form-control" type="file" name="background_img" id="background_img">
